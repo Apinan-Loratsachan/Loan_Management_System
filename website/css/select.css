@@ -1,0 +1,16 @@
+.prevent-all {
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    pointer-events: none;
+}
+
+.prevent-select {
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.prevent-pointer {
+    pointer-events: none;
+}

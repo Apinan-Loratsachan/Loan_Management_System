@@ -77,7 +77,7 @@ func searchCustomer(db *gorm.DB, customerName string) ([]Customer, error) {
 
 func getCustomers(db *gorm.DB) []Customer {
 	var customers []Customer
-	result := db.Find(&customers)
+	result := db.Order("id").Find(&customers)
 
 	if result.Error != nil {
 		log.Fatalf("Get customer failed: %v", result.Error)
