@@ -14,3 +14,10 @@
 .prevent-pointer {
     pointer-events: none;
 }
+
+.unprevent {
+    -webkit-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+    pointer-events: auto;
+}

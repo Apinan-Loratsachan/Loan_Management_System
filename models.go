@@ -63,9 +63,9 @@ func deleteCustomer(db *gorm.DB, id int) error {
 	return nil
 }
 
-func searchCustomer(db *gorm.DB, customerName string) ([]Customer, error) {
+func searchCustomer(db *gorm.DB, customerTel string) ([]Customer, error) {
 	var customers []Customer
-	result := db.Where("name = ?", customerName).Find(&customers)
+	result := db.Where("tel = ?", customerTel).Find(&customers)
 
 	if result.Error != nil {
 		log.Fatalf("Search customer failed: %v", result.Error)

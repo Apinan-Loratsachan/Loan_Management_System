@@ -1,4 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300&family=Noto+Sans+Thai&display=swap');
+@import "animate.css";
+@import "select.css";
 
 * {
     font-family: 'Noto Sans Thai', sans-serif;
@@ -16,7 +18,7 @@ body {
 }
 
 .container {
-    max-width: 1200px;
+    max-width: 1400px;
 }
 
 .rounded-corner {
@@ -24,14 +26,14 @@ body {
 }
 
 .card-bg {
-    background-color: rgba(255, 255, 255, 0.45);
+    background-color: rgba(255, 255, 255, 0.55);
 }
 
 .blur {
     box-shadow: 0 0 10px 1px rgba(0, 0, 0, 0.25);
 
-    backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
 }
 
 table {
@@ -66,9 +68,9 @@ td {
 }
 
 .modal-content {
-    background-color: rgba(255, 255, 255, 0.45);
+    background-color: rgba(255, 255, 255, 0.30);
     box-shadow: 0 0 10px 1px rgba(0, 0, 0, 0.25);
 
-    backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
 }

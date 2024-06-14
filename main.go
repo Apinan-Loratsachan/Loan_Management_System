@@ -100,7 +100,7 @@ func main() {
 			return c.Status(fiber.StatusBadRequest).SendString(err.Error())
 		}
 		return c.JSON(fiber.Map{
-			"message": "Update customer sucessful",
+			"message": "Update customer " + c.Params("id") + " sucessful",
 		})
 	})
 
@@ -114,13 +114,13 @@ func main() {
 			return c.Status(fiber.StatusBadRequest).SendString(err.Error())
 		}
 		return c.JSON(fiber.Map{
-			"message": "Delete customer sucessful",
+			"message": "Delete customer " + c.Params("id") + " sucessful",
 		})
 	})
 
-	app.Get("/customers/search/:name", func(c *fiber.Ctx) error {
-		name, _ := url.QueryUnescape(c.Params("name"))
-		result, err := searchCustomer(db, name)
+	app.Get("/customers/search/:tel", func(c *fiber.Ctx) error {
+		tel, _ := url.QueryUnescape(c.Params("tel"))
+		result, err := searchCustomer(db, tel)
 		if err != nil {
 			return c.Status(fiber.StatusBadRequest).SendString(err.Error())
 		}
