@@ -1,7 +1,7 @@
 getLoans()
 
-const resultTitle = document.getElementById('processResultModalTitle');
-const resultBody = document.getElementById('processResultModalBody');
+resultTitle = document.getElementById('processResultModalTitle');
+resultBody = document.getElementById('processResultModalBody');
 
 async function getLoans() {
     document.getElementById('getAllLoanBtn').innerText = 'โหลดข้อมูลใหม่'
@@ -51,7 +51,9 @@ async function getLoans() {
                     document.getElementById('outputTable').innerHTML += `
                     <tr id="loanId${data[i].ID}">
                         <td class='text-center'>${data[i].ID}</td>
-                        <td id='loanOwner${data[i].ID}'>${data[i].Customer.Name}</td>
+                        <td id='loanOwner${data[i].ID}'>
+                            <a class='linkText' onclick="window.location.replace('customers.html?q=${data[i].Customer.IdCardNumber}')">${data[i].Customer.Name}</a>
+                        </td>
                         <td id='loanAmount${data[i].ID}'>${data[i].Amount}</td>
                         <td id='loanInterest${data[i].ID}'>${data[i].LoanInterest}</td>
                         <td id='loanStartDate${data[i].ID}'>${data[i].StartDate}</td>

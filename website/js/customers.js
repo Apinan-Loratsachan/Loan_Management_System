@@ -1,9 +1,16 @@
-getCustomers()
+const params = new URLSearchParams(window.location.search);
+if (params.get('q') != null) {
+    document.getElementById('searchText').value = params.get('q')
+    searchUser()
+} else {
+    getCustomers()
+}
 
-const resultTitle = document.getElementById('processResultModalTitle');
-const resultBody = document.getElementById('processResultModalBody');
+resultTitle = document.getElementById('processResultModalTitle');
+resultBody = document.getElementById('processResultModalBody');
 
 async function getCustomers() {
+    document.getElementById('searchText').value = null
     document.getElementById('getAllUserBtn').innerText = 'โหลดข้อมูลใหม่'
     document.getElementById('getAllUserBtn').classList.remove('btn-info')
     document.getElementById('getAllUserBtn').classList.add('btn-dark')
@@ -23,7 +30,6 @@ async function getCustomers() {
     await fetch('http://127.0.0.1:8080/customers', { method: 'GET' })
         .then(response => response.json())
         .then(data => {
-            console.log(data)
             if (data.length != 0) {
                 document.getElementById('outputContainer').innerHTML = `
                 <div class='p-3 card-bg rounded-corner blur text-center animate__animated animate__fadeInUp'>
@@ -303,12 +309,12 @@ async function createUserInfo() {
 
 async function searchUser() {
     const searchBtn = document.getElementById('searchBtn')
-    const tel = document.getElementById('searchText').value
+    const idCard = document.getElementById('searchText').value
 
     searchBtn.disabled = true
 
     try {
-        const response = await fetch(`http://127.0.0.1:8080/customers/search/${tel}`, {
+        const response = await fetch(`http://127.0.0.1:8080/customers/search/${idCard}`, {
             method: 'GET'
         });
 
@@ -318,7 +324,7 @@ async function searchUser() {
             console.log(data);
             document.getElementById('getAllUserBtn').classList.remove('btn-dark')
             document.getElementById('getAllUserBtn').classList.add('btn-info')
-            document.getElementById('getAllUserBtn').innerText = 'ข้อมูลลูกค้าทั้งหมด'
+            document.getElementById('getAllUserBtn').innerHTML = 'กำลังแสดงผลการค้นหา <b><u>คลิกที่นี่</u></b> เพื่อแสดงข้อมูลลูกค้าทั้งหมด'
             if (data.length != 0) {
                 document.getElementById('outputContainer').innerHTML = `
                 <div class='p-3 card-bg rounded-corner blur text-center animate__animated animate__fadeInUp'>

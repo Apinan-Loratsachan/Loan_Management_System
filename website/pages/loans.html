@@ -10,17 +10,22 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.css">
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="./../css/style.css">
 </head>
 
 <body>
     <div class="container mt-3 prevent-select" id="bodyContainer">
         <div class="p-3 card-bg rounded-corner blur text-center">
-            <h1 class="header p-2">Loan Management System</h1>
-            <h5 class="header p-2">จัดการข้อมูลลูกค้า</h5>
+            <h1 class="header p-2" onclick="window.location.replace('./../index.html')">Loan Management System</h1>
+            <div class="btn-group w-100 pb-3">
+                <button type="button" class="btn btn-dark w-100" id="customersBtn" onclick="customersBtn()">ลูกค้า</button>
+                <button type="button" class="btn btn-dark w-100 active" id="loansBtn" onclick="loansBtn()">เงินกู้</button>
+                <button type="button" class="btn btn-dark w-100" id="paymentsBtn" onclick="paymentsBtn()">การชำระเงิน</button>
+            </div>
+            <h3 class="text-center p-2">จัดการข้อมูลเงินกู้</h3>
             <form action="javascript:;" onsubmit="searchLoan()">
                 <div class="input-group mb-3">
-                    <input type="text" class="form-control" placeholder="ค้นหาด้วยหมายเลขโทรศัพท์"
+                    <input type="text" class="form-control" placeholder="ค้นหาด้วยหมายเลขประจำตัวประชาชน"
                         aria-label="searchText" aria-describedby="searchText" id="searchText" required>
                     <button class="btn btn-dark" type="submit" id="searchBtn">ค้นหา</button>
                 </div>
@@ -185,14 +190,14 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.4.0/color-thief.min.js"
         integrity="sha512-r2yd2GP87iHAsf2K+ARvu01VtR7Bs04la0geDLbFlB/38AruUbA5qfmtXwXx6FZBQGJRogiPtEqtfk/fnQfaYA=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
-        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
-        crossorigin="anonymous"></script>
+        <script src="https://code.jquery.com/jquery-3.7.1.js"
+        integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
         crossorigin="anonymous"></script>
     <script src="https://kit.fontawesome.com/da71fc72b9.js" crossorigin="anonymous"></script>
-    <script src="js/loans.js"></script>
+    <script src="./../js/loans.js"></script>
+    <script src="./../js/pages.js"></script>
 </body>
 
 </html>
