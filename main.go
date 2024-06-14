@@ -68,7 +68,12 @@ func main() {
 		if err != nil {
 			return c.Status(fiber.StatusBadRequest).SendString(err.Error())
 		}
-		return c.JSON(api.GetCustomer(db, id))
+		cardId := uint(id)
+		result, err := api.GetCustomer(db, cardId)
+		if err != nil {
+			return c.Status(fiber.StatusNotFound).SendString(err.Error())
+		}
+		return c.JSON(result)
 	})
 
 	app.Post("/customers", func(c *fiber.Ctx) error {
@@ -76,11 +81,17 @@ func main() {
 		if err := c.BodyParser(customer); err != nil {
 			return c.Status(fiber.StatusBadRequest).SendString(err.Error())
 		}
-		err := api.CreateCustomer(db, customer)
+		err, alreadyUse := api.CreateCustomer(db, customer)
 		if err != nil {
 			return c.Status(fiber.StatusBadRequest).SendString(err.Error())
+		} else if alreadyUse {
+			return c.JSON(fiber.Map{
+				"success": false,
+				"message": "Creating customer failed ID Card Number is already use",
+			})
 		}
 		return c.JSON(fiber.Map{
+			"success": true,
 			"message": "Create customer sucessful",
 		})
 	})
@@ -120,9 +131,9 @@ func main() {
 		})
 	})
 
-	app.Get("/customers/search/:tel", func(c *fiber.Ctx) error {
-		tel, _ := url.QueryUnescape(c.Params("tel"))
-		result, err := api.SearchCustomer(db, tel)
+	app.Get("/customers/search/:id_card_number", func(c *fiber.Ctx) error {
+		id_card_number, _ := url.QueryUnescape(c.Params("id_card_number"))
+		result, err := api.SearchCustomer(db, id_card_number)
 		if err != nil {
 			return c.Status(fiber.StatusBadRequest).SendString(err.Error())
 		}

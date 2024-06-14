@@ -1,6 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300&family=Noto+Sans+Thai&display=swap');
 @import "animate.css";
 @import "select.css";
+@import "background.css";
 
 * {
     font-family: 'Noto Sans Thai', sans-serif;

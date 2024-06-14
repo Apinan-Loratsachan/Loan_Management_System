@@ -9,33 +9,38 @@ import (
 
 type Customer struct {
 	gorm.Model
-	Name    string
-	Address string
-	Tel     string
-	Email   string
+	IdCardNumber uint `gorm:"not null"`
+	Name         string
+	Address      string
+	Tel          string
+	Email        string
 }
 
-func CreateCustomer(db *gorm.DB, customer *Customer) error {
-	result := db.Create(customer)
-
-	if result.Error != nil {
-		log.Fatalf("Creating customer failed: %v", result.Error)
-		return result.Error
+func CreateCustomer(db *gorm.DB, customer *Customer) (error, bool) {
+	idCardCheck, err := GetCustomer(db, customer.IdCardNumber)
+	if idCardCheck == nil {
+		result := db.Create(customer)
+		if result.Error != nil {
+			log.Fatalf("Creating customer failed: %v", result.Error)
+			return result.Error, false
+		}
+		fmt.Println("Creating customer successful")
+		return nil, false
+	} else {
+		fmt.Println("Creating customer failed ID Card Number is already use")
+		return err, true
 	}
-
-	fmt.Println("Creating customer successful")
-	return nil
 }
 
-func GetCustomer(db *gorm.DB, id int) *Customer {
+func GetCustomer(db *gorm.DB, cardId uint) (*Customer, error) {
 	var customer Customer
-	result := db.First(&customer, id)
+	result := db.Where("id_card_number = ?", cardId).First(&customer)
 
 	if result.Error != nil {
-		log.Fatalf("Get customer failed: %v", result.Error)
+		return nil, result.Error
 	}
 
-	return &customer
+	return &customer, nil
 }
 
 func UpdateCustomer(db *gorm.DB, customer *Customer) error {
@@ -63,9 +68,9 @@ func DeleteCustomer(db *gorm.DB, id int) error {
 	return nil
 }
 
-func SearchCustomer(db *gorm.DB, customerTel string) ([]Customer, error) {
+func SearchCustomer(db *gorm.DB, customerIdCard string) ([]Customer, error) {
 	var customers []Customer
-	result := db.Order("id").Where("tel = ?", customerTel).Find(&customers)
+	result := db.Order("id").Where("id_card_number = ?", customerIdCard).Find(&customers)
 
 	if result.Error != nil {
 		log.Fatalf("Search customer failed: %v", result.Error)

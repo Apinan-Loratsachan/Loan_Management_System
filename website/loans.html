@@ -18,13 +18,13 @@
         <div class="p-3 card-bg rounded-corner blur text-center">
             <h1 class="header p-2">Loan Management System</h1>
             <h5 class="header p-2">จัดการข้อมูลลูกค้า</h5>
-            <form action="javascript:;" onsubmit="searchUser()">
+            <form action="javascript:;" onsubmit="searchLoan()">
                 <div class="input-group mb-3">
                     <input type="text" class="form-control" placeholder="ค้นหาด้วยหมายเลขโทรศัพท์"
                         aria-label="searchText" aria-describedby="searchText" id="searchText" required>
                     <button class="btn btn-dark" type="submit" id="searchBtn">ค้นหา</button>
                 </div>
-                <button type="button" class="btn btn-dark" onclick="getCustomers()" id="getAllUserBtn">โหลดข้อมูลใหม่</button>
+                <button type="button" class="btn btn-dark" onclick="getLoans()" id="getAllLoanBtn">โหลดข้อมูลใหม่</button>
             </form>
         </div>
         <div id="outputContainer" class="py-5 unprevent">
@@ -59,7 +59,7 @@
 
     <div>
         <!-- Delete Modal -->
-        <div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
+        <div class="modal fade" id="deleteLoanModal" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -78,52 +78,47 @@
             </div>
         </div>
         <!-- Update Modal -->
-        <div class="modal fade" id="updateUserModal" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
+        <div class="modal fade" id="updateLoanModal" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
             <div class="modal-dialog modal-fullscreen">
                 <div class="modal-content">
-                    <form style="height: 100%;" action="javascript:;" onsubmit="updateUserInfo()">
+                    <form style="height: 100%;" action="javascript:;" onsubmit="updateLoanInfo()">
                         <div class="modal-header justify-content-center">
                             <h1 class="modal-title fs-3" id="modalTitle">แก้ไขข้อมูล</h1>
                             <!-- <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button> -->
                         </div>
                         <div id="deleteModalContent" class="modal-body container">
                             <div class="mb-3">
-                                <label for="updateUserIdInput" class="form-label">ID</label>
-                                <input type="text" class="form-control" id="updateUserIdInput"
+                                <label for="updateLoanIdInput" class="form-label">ID</label>
+                                <input type="text" class="form-control" id="updateLoanIdInput"
                                     placeholder="เกิดข้อผิดพลาด" disabled>
-                                <div id="updateUserIdInputHelp" class="form-text">คุณไม่สามารถแก้ไข ID ได้</div>
+                                <div id="updateLoanIdInputHelp" class="form-text">คุณไม่สามารถแก้ไข ID ได้</div>
                             </div>
                             <div class="mb-3">
-                                <label for="updateUserNameInput" class="form-label">ชื่อ - สกุล</label>
-                                <input type="text" class="form-control" id="updateUserNameInput"
-                                    placeholder="ชื่อ นามสกุล" required>
+                                <label for="updateLoanNameInput" class="form-label">ชื่อ - สกุล</label>
+                                <input type="text" class="form-control" id="updateLoanNameInput"
+                                    placeholder="ชื่อ นามสกุล">
                             </div>
                             <div class="mb-3">
-                                <label for="updateUserIdCardInput" class="form-label">เลขประจำตัวประชาชน</label>
-                                <input type="text" class="form-control" id="updateUserIdCardInput"
-                                    placeholder="เลขประจำตัวประชาชน 13 หลัก" pattern="[0-9]{13}" required>
+                                <label for="updateLoanAddressInput" class="form-label">ที่อยู่</label>
+                                <input type="text" class="form-control" id="updateLoanAddressInput"
+                                    placeholder="ที่อยู่">
                             </div>
                             <div class="mb-3">
-                                <label for="updateUserAddressInput" class="form-label">ที่อยู่</label>
-                                <input type="text" class="form-control" id="updateUserAddressInput"
-                                    placeholder="ที่อยู่" required>
+                                <label for="updateLoanTelInput" class="form-label">เบอร์โทรศัพท์</label>
+                                <input type="text" class="form-control" id="updateLoanTelInput"
+                                    placeholder="0987654321">
                             </div>
                             <div class="mb-3">
-                                <label for="updateUserTelInput" class="form-label">เบอร์โทรศัพท์</label>
-                                <input type="text" class="form-control" id="updateUserTelInput"
-                                    placeholder="0987654321" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="updateUserEmailInput" class="form-label"
+                                <label for="updateLoanEmailInput" class="form-label"
                                     aria-describedby="emailHelp">อีเมล</label>
-                                <input type="email" class="form-control" id="updateUserEmailInput"
-                                    placeholder="example@mail.com" required>
+                                <input type="email" class="form-control" id="updateLoanEmailInput"
+                                    placeholder="example@mail.com">
                             </div>
                         </div>
                         <div class="modal-footer" style="position: fixed; bottom: 25px; right: 25px;">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
-                                id="updateUserCancleBtn">ยกเลิก</button>
-                            <button type="submit" class="btn btn-primary" id="updateUserBtn">บันทึก</button>
+                                id="updateLoanCancleBtn">ยกเลิก</button>
+                            <button type="submit" class="btn btn-primary" id="updateLoanBtn">บันทึก</button>
                         </div>
                     </form>
                 </div>
@@ -144,46 +139,41 @@
             </div>
         </div>
         <!-- Create Modal -->
-        <div class="modal fade" id="createUserModal" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
+        <div class="modal fade" id="createLoanModal" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
             <div class="modal-dialog modal-fullscreen">
                 <div class="modal-content">
-                    <form style="height: 100%;" action="javascript:;" onsubmit="createUserInfo()">
+                    <form style="height: 100%;" action="javascript:;" onsubmit="createLoanInfo()">
                         <div class="modal-header justify-content-center">
                             <h1 class="modal-title fs-3" id="modalTitle">เพิ่มข้อมูลลูกค้า</h1>
                             <!-- <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button> -->
                         </div>
                         <div id="deleteModalContent" class="modal-body container">
                             <div class="mb-3">
-                                <label for="createUserNameInput" class="form-label">ชื่อ - สกุล</label>
-                                <input type="text" class="form-control" id="createUserNameInput"
+                                <label for="createLoanNameInput" class="form-label">ชื่อ - สกุล</label>
+                                <input type="text" class="form-control" id="createLoanNameInput"
                                     placeholder="ชื่อ นามสกุล" required>
                             </div>
                             <div class="mb-3">
-                                <label for="createUserIdCardInput" class="form-label">เลขประจำตัวประชาชน</label>
-                                <input type="text" class="form-control" id="createUserIdCardInput"
-                                    placeholder="เลขประจำตัวประชาชน 13 หลัก" pattern="[0-9]{13}" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="createUserAddressInput" class="form-label">ที่อยู่</label>
-                                <input type="text" class="form-control" id="createUserAddressInput"
+                                <label for="createLoanAddressInput" class="form-label">ที่อยู่</label>
+                                <input type="text" class="form-control" id="createLoanAddressInput"
                                     placeholder="ที่อยู่" required>
                             </div>
                             <div class="mb-3">
-                                <label for="createUserTelInput" class="form-label">เบอร์โทรศัพท์</label>
-                                <input type="text" class="form-control" id="createUserTelInput" placeholder="0987654321"
+                                <label for="createLoanTelInput" class="form-label">เบอร์โทรศัพท์</label>
+                                <input type="text" class="form-control" id="createLoanTelInput" placeholder="0987654321"
                                     required>
                             </div>
                             <div class="mb-3">
-                                <label for="createUserEmailInput" class="form-label"
+                                <label for="createLoanEmailInput" class="form-label"
                                     aria-describedby="emailHelp">อีเมล</label>
-                                <input type="email" class="form-control" id="createUserEmailInput"
+                                <input type="email" class="form-control" id="createLoanEmailInput"
                                     placeholder="example@mail.com" required>
                             </div>
                         </div>
                         <div class="modal-footer" style="position: fixed; bottom: 25px; right: 25px;">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
-                                id="createUserCancleBtn">ยกเลิก</button>
-                            <button type="submit" class="btn btn-primary" id="createUserBtn">บันทึก</button>
+                                id="createLoanCancleBtn">ยกเลิก</button>
+                            <button type="submit" class="btn btn-primary" id="createLoanBtn">บันทึก</button>
                         </div>
                     </form>
                 </div>
@@ -202,7 +192,7 @@
         integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
         crossorigin="anonymous"></script>
     <script src="https://kit.fontawesome.com/da71fc72b9.js" crossorigin="anonymous"></script>
-    <script src="js/customers.js"></script>
+    <script src="js/loans.js"></script>
 </body>
 
 </html>
