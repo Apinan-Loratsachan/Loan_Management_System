@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/apinan-loratsachan/fiber-postgresql-gorm/api"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"gorm.io/driver/postgres"
@@ -47,7 +48,7 @@ func main() {
 		fmt.Println("Connect database successful")
 	}
 
-	db.AutoMigrate(&Customer{})
+	db.AutoMigrate(&api.Customer{}, &api.Loan{})
 	fmt.Println("Migrate database successful")
 
 	app := fiber.New()
@@ -57,8 +58,9 @@ func main() {
 		AllowMethods: "GET,POST,HEAD,PUT,DELETE,PATCH,OPTIONS",
 	}))
 
+	// Customers API
 	app.Get("/customers", func(c *fiber.Ctx) error {
-		return c.JSON(getCustomers(db))
+		return c.JSON(api.GetCustomers(db))
 	})
 
 	app.Get("/customers/:id", func(c *fiber.Ctx) error {
@@ -66,15 +68,15 @@ func main() {
 		if err != nil {
 			return c.Status(fiber.StatusBadRequest).SendString(err.Error())
 		}
-		return c.JSON(getCustomer(db, id))
+		return c.JSON(api.GetCustomer(db, id))
 	})
 
 	app.Post("/customers", func(c *fiber.Ctx) error {
-		customer := new(Customer)
+		customer := new(api.Customer)
 		if err := c.BodyParser(customer); err != nil {
 			return c.Status(fiber.StatusBadRequest).SendString(err.Error())
 		}
-		err := createCustomer(db, customer)
+		err := api.CreateCustomer(db, customer)
 		if err != nil {
 			return c.Status(fiber.StatusBadRequest).SendString(err.Error())
 		}
@@ -88,14 +90,14 @@ func main() {
 		if err != nil {
 			return c.Status(fiber.StatusBadRequest).SendString(err.Error())
 		}
-		customer := new(Customer)
+		customer := new(api.Customer)
 		if err := c.BodyParser(customer); err != nil {
 			return c.Status(fiber.StatusBadRequest).SendString(err.Error())
 		}
 
 		customer.ID = uint(id)
 
-		err = updateCustomer(db, customer)
+		err = api.UpdateCustomer(db, customer)
 		if err != nil {
 			return c.Status(fiber.StatusBadRequest).SendString(err.Error())
 		}
@@ -109,7 +111,7 @@ func main() {
 		if err != nil {
 			return c.Status(fiber.StatusBadRequest).SendString(err.Error())
 		}
-		err = deleteCustomer(db, id)
+		err = api.DeleteCustomer(db, id)
 		if err != nil {
 			return c.Status(fiber.StatusBadRequest).SendString(err.Error())
 		}
@@ -120,11 +122,30 @@ func main() {
 
 	app.Get("/customers/search/:tel", func(c *fiber.Ctx) error {
 		tel, _ := url.QueryUnescape(c.Params("tel"))
-		result, err := searchCustomer(db, tel)
+		result, err := api.SearchCustomer(db, tel)
 		if err != nil {
 			return c.Status(fiber.StatusBadRequest).SendString(err.Error())
 		}
 		return c.JSON(result)
+	})
+
+	// Loans API
+	app.Get("/loans", func(c *fiber.Ctx) error {
+		return c.JSON(api.GetLoans(db))
+	})
+
+	app.Post("/loans", func(c *fiber.Ctx) error {
+		loan := new(api.Loan)
+		if err := c.BodyParser(loan); err != nil {
+			return c.Status(fiber.StatusBadRequest).SendString(err.Error())
+		}
+		err := api.CreateLoan(db, loan)
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).SendString(err.Error())
+		}
+		return c.JSON(fiber.Map{
+			"message": "Create loan sucessful",
+		})
 	})
 
 	app.Listen(":8080")

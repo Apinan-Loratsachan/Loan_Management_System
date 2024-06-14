@@ -5,6 +5,8 @@ const resultBody = document.getElementById('processResultModalBody');
 
 async function getCustomers() {
     document.getElementById('getAllUserBtn').innerText = 'โหลดข้อมูลใหม่'
+    document.getElementById('getAllUserBtn').classList.remove('btn-info')
+    document.getElementById('getAllUserBtn').classList.add('btn-dark')
     document.getElementById('outputContainer').innerHTML = `
         <div id="loader" class="pb-4 card-bg rounded-corner blur text-center animate__animated animate__bounceIn">
             <div class="loader animate__animated animate__infinite">
@@ -265,6 +267,8 @@ async function searchUser() {
 
         if (response.status === 200) {
             console.log(data);
+            document.getElementById('getAllUserBtn').classList.remove('btn-dark')
+            document.getElementById('getAllUserBtn').classList.add('btn-info')
             document.getElementById('getAllUserBtn').innerText = 'ข้อมูลลูกค้าทั้งหมด'
             if (data.length != 0) {
                 document.getElementById('outputContainer').innerHTML = `

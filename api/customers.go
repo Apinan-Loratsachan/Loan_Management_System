@@ -1,4 +1,4 @@
-package main
+package api
 
 import (
 	"fmt"
@@ -15,7 +15,7 @@ type Customer struct {
 	Email   string
 }
 
-func createCustomer(db *gorm.DB, customer *Customer) error {
+func CreateCustomer(db *gorm.DB, customer *Customer) error {
 	result := db.Create(customer)
 
 	if result.Error != nil {
@@ -27,7 +27,7 @@ func createCustomer(db *gorm.DB, customer *Customer) error {
 	return nil
 }
 
-func getCustomer(db *gorm.DB, id int) *Customer {
+func GetCustomer(db *gorm.DB, id int) *Customer {
 	var customer Customer
 	result := db.First(&customer, id)
 
@@ -38,7 +38,7 @@ func getCustomer(db *gorm.DB, id int) *Customer {
 	return &customer
 }
 
-func updateCustomer(db *gorm.DB, customer *Customer) error {
+func UpdateCustomer(db *gorm.DB, customer *Customer) error {
 	result := db.Model(&customer).Updates(customer)
 
 	if result.Error != nil {
@@ -50,7 +50,7 @@ func updateCustomer(db *gorm.DB, customer *Customer) error {
 	return nil
 }
 
-func deleteCustomer(db *gorm.DB, id int) error {
+func DeleteCustomer(db *gorm.DB, id int) error {
 	var customer Customer
 	result := db.Delete(&customer, id)
 
@@ -63,9 +63,9 @@ func deleteCustomer(db *gorm.DB, id int) error {
 	return nil
 }
 
-func searchCustomer(db *gorm.DB, customerTel string) ([]Customer, error) {
+func SearchCustomer(db *gorm.DB, customerTel string) ([]Customer, error) {
 	var customers []Customer
-	result := db.Where("tel = ?", customerTel).Find(&customers)
+	result := db.Order("id").Where("tel = ?", customerTel).Find(&customers)
 
 	if result.Error != nil {
 		log.Fatalf("Search customer failed: %v", result.Error)
@@ -75,7 +75,7 @@ func searchCustomer(db *gorm.DB, customerTel string) ([]Customer, error) {
 	return customers, nil
 }
 
-func getCustomers(db *gorm.DB) []Customer {
+func GetCustomers(db *gorm.DB) []Customer {
 	var customers []Customer
 	result := db.Order("id").Find(&customers)
 
