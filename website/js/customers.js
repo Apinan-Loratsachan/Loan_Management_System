@@ -132,19 +132,32 @@ async function updateUserInfo() {
 
         if (response.status === 200) {
             console.log(data);
-            document.getElementById(`userName${userId}`).innerText = userName
-            document.getElementById(`userIdCard${userId}`).innerText = userIdCard
-            document.getElementById(`userAddress${userId}`).innerText = userAddress
-            document.getElementById(`userTel${userId}`).innerText = userTel
-            document.getElementById(`userEmail${userId}`).innerText = userEmail
-            document.getElementById(`userUpdate${userId}`).setAttribute('onclick', `openUpdateModal(${userId}, '${userName}', ${userIdCard}, '${userAddress}', '${userTel}', '${userEmail}')`)
-            document.getElementById(`userDelete${userId}`).setAttribute('onclick', `confirmDeleteUser(${userId}, '${userName}')`)
-            resultTitle.innerHTML = `<i class="fa-solid fa-circle-check text-success"></i> บันทึกข้อมูลสำเร็จ`
-            resultBody.innerHTML = `บันทึกการเปลี่ยนแปลงข้อมูลแล้ว`
-            $("#updateUserModal").modal("hide");
-            $("#processResultModal").modal("show");
-            saveBtn.disabled = false
-            cancleBtn.disabled = false
+            if (data.success) {
+                document.getElementById(`userName${userId}`).innerText = userName
+                document.getElementById(`userIdCard${userId}`).innerText = userIdCard
+                document.getElementById(`userAddress${userId}`).innerText = userAddress
+                document.getElementById(`userTel${userId}`).innerText = userTel
+                document.getElementById(`userEmail${userId}`).innerText = userEmail
+                document.getElementById(`userUpdate${userId}`).setAttribute('onclick', `openUpdateModal(${userId}, '${userName}', ${userIdCard}, '${userAddress}', '${userTel}', '${userEmail}')`)
+                document.getElementById(`userDelete${userId}`).setAttribute('onclick', `confirmDeleteUser(${userId}, '${userName}')`)
+                resultTitle.innerHTML = `<i class="fa-solid fa-circle-check text-success"></i> บันทึกข้อมูลสำเร็จ`
+                resultBody.innerHTML = `บันทึกการเปลี่ยนแปลงข้อมูลแล้ว`
+                $("#updateUserModal").modal("hide");
+                $("#processResultModal").modal("show");
+                saveBtn.disabled = false
+                cancleBtn.disabled = false
+            } else {
+                resultTitle.innerHTML = `<i class="fa-solid fa-circle-info" style="color: #FFD43B;"></i> บันทึกข้อมูลไม่สำเร็จ`
+                resultBody.innerHTML = `เลขประจำตัวประชาชนนี้มีอยู่ในระบบแล้ว`
+                $("#updateUserModal").modal("hide");
+                $("#processResultModal").modal("show");
+                document.getElementById('createUserNameInput').value = null;
+                document.getElementById('createUserAddressInput').value = null;
+                document.getElementById('createUserTelInput').value = null;
+                document.getElementById('createUserEmailInput').value = null;
+                saveBtn.disabled = false
+                cancleBtn.disabled = false
+            }
         } else {
             resultTitle.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-danger"></i> บันทึกข้อมูลไม่สำเร็จ`
             resultBody.innerHTML = `ข้อผิดพลาด : ${data}`

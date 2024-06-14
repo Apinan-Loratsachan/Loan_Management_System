@@ -43,16 +43,26 @@ func GetCustomer(db *gorm.DB, cardId uint) (*Customer, error) {
 	return &customer, nil
 }
 
-func UpdateCustomer(db *gorm.DB, customer *Customer) error {
-	result := db.Model(&customer).Updates(customer)
+func UpdateCustomer(db *gorm.DB, customer *Customer) (error, bool) {
+	// Check if any other customer has the same ID card number
+	var count int64
+	db.Model(&Customer{}).Where("id_card_number = ? AND id <> ?", customer.IdCardNumber, customer.ID).Count(&count)
 
-	if result.Error != nil {
-		log.Fatalf("Update customer failed: %v", result.Error)
-		return result.Error
+	// If there is any other customer with the same ID card number, return an error
+	if count > 0 {
+		fmt.Println("Update customer failed: ID Card Number is already used by another customer")
+		return fmt.Errorf("ID Card Number is already used by another customer"), true
 	}
 
-	fmt.Println("Update customer sucessful")
-	return nil
+	// Proceed with the update
+	result := db.Model(&customer).Updates(customer)
+	if result.Error != nil {
+		log.Fatalf("Update customer failed: %v", result.Error)
+		return result.Error, false
+	}
+
+	fmt.Println("Update customer successful")
+	return nil, false
 }
 
 func DeleteCustomer(db *gorm.DB, id int) error {

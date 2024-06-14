@@ -108,11 +108,23 @@ func main() {
 
 		customer.ID = uint(id)
 
-		err = api.UpdateCustomer(db, customer)
+		err, alreadyUse := api.UpdateCustomer(db, customer)
 		if err != nil {
+			if err.Error() == "ID Card Number is already used by another customer" {
+				return c.JSON(fiber.Map{
+					"success": false,
+					"message": err.Error(),
+				})
+			}
 			return c.Status(fiber.StatusBadRequest).SendString(err.Error())
+		} else if alreadyUse {
+			return c.JSON(fiber.Map{
+				"success": false,
+				"message": "Update customer failed ID Card Number is already use",
+			})
 		}
 		return c.JSON(fiber.Map{
+			"success": true,
 			"message": "Update customer " + c.Params("id") + " sucessful",
 		})
 	})
