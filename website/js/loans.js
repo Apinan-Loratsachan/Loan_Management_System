@@ -1,14 +1,170 @@
-getLoans()
+var state = 1
+
+const params = new URLSearchParams(window.location.search);
+if (params.get('id') != null) {
+    searchLoan(true)
+} else if (params.get('q') != null) {
+    document.getElementById('searchText').value = params.get('q')
+    searchLoan()
+} else {
+    getLoans()
+}
 
 resultTitle = document.getElementById('processResultModalTitle');
 resultBody = document.getElementById('processResultModalBody');
 
+function displayLoans(data) {
+    if (data.length != 0) {
+        document.getElementById('outputContainer').innerHTML = `
+        <div class='p-3 card-bg rounded-corner blur text-center animate__animated animate__fadeInUp'>
+            <div class="ovf-scroll">
+                <table class="text-start">
+                    <tbody id="outputTable">
+                        <th class='text-center'>รหัสเงินกู้</th>
+                        <th>ชื่อผู้กู้ยืม</th>
+                        <th class='text-center'>วันที่กู้</th>
+                        <th class='text-center'>วันสิ้นสุด</th>
+                        <th class='text-end'>จำนวนเงินกู้</th>
+                        <th class='text-center'>อัตราดอกเบี้ย</th>
+                        <th class='text-center'>ยอดสุทธิ</th>
+                        <th class='text-end'>ยอดชำระ</th>
+                        <th class='text-end'>ยอดค้างชำระ</th>
+                        <th class='text-center'>สถานะ</th>
+                        <th class="text-center prevent-select">ดำเนินการ</th>
+                    </tbody>
+                </table>
+            </div>
+        </div>`
+        for (i = 0; i < data.length; i++) {
+            document.getElementById('outputTable').innerHTML += `
+            <tr id="loanId${data[i].ID}">
+                <td class='text-center'>
+                <a class='linkText' onclick="window.location.replace('payments.html?q=${data[i].ID}')">${data[i].ID}</a>
+                </td>
+                <td id='loanOwner${data[i].ID}'>
+                    <a class='linkText' onclick="window.location.replace('customers.html?q=${data[i].Customer.IdCardNumber}')">${data[i].Customer.Name}</a>
+                </td>
+                <td id='loanStartDate${data[i].ID}' class='text-center'>${convertDate(data[i].StartDate)}</td>
+                <td id='loanDueDate${data[i].ID}' class='text-center'>${convertDate(data[i].DueDate)}</td>
+                <td id='loanAmount${data[i].ID}' class='text-end'>${currencyFormatter.format(data[i].Amount)}</td>
+                <td id='loanInterest${data[i].ID}' class='text-center'>${data[i].LoanInterest}%</td>
+                <td id='loanFinalAmount${data[i].ID}' class='text-center'>${currencyFormatter.format(data[i].FinalAmount)}</td>
+                <td id='loanTotalPay${data[i].ID}' class='text-end'>${currencyFormatter.format(data[i].TotalPayments)}</td>
+                <td id='loanBalance${data[i].ID}' class='text-end'>${currencyFormatter.format(data[i].Balance)}</td>
+                <td id='loanStatus${data[i].ID}' class='text-center'>${setLoanStatus(data[i].Status, data[i].DueDate)}</td>
+                <td class="text-center table-btn prevent-select">
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#updateLoanModal" id="loanUpdate${data[i].ID}" onclick="openUpdateModal(${data[i].ID}, ${data[i].Amount}, ${data[i].LoanInterest}, '${data[i].StartDate.replaceAll('T00:00:00Z', '')}', '${data[i].DueDate.replaceAll('T00:00:00Z', '')}', ${data[i].Customer.ID}, '${data[i].Customer.Name}', ${data[i].Customer.IdCardNumber})">แก้ไข</button>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createPaymentModal" id="paymentCreate${data[i].ID}" onclick="openCreatePaymentModal(${data[i].ID}, ${data[i].Customer.ID}, '${data[i].Customer.Name}', ${data[i].Customer.IdCardNumber}, ${data[i].Balance})">เพิ่มการชำระเงิน</button>
+                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteLoanModal" id="loanDelete${data[i].ID}" onclick="confirmDeleteLoan(${data[i].ID}, '${data[i].Customer.Name}', ${data[i].Amount}, ${data[i].LoanInterest}, '${data[i].StartDate.replaceAll('T00:00:00Z', '')}', '${data[i].DueDate.replaceAll('T00:00:00Z', '')}')">ลบ</button>
+                </td>
+            </tr>`;
+            if (data[i].Status == 2) {
+                const editBtn = document.getElementById(`loanUpdate${data[i].ID}`)
+                const createPaymentBtn = document.getElementById(`paymentCreate${data[i].ID}`)
+                editBtn.removeAttribute("onclick");
+                editBtn.removeAttribute("data-bs-target");
+                editBtn.removeAttribute("data-bs-toggle");
+                editBtn.disabled = true
+                editBtn.classList.remove('btn-primary')
+                editBtn.classList.add('btn-secondary')
+
+                createPaymentBtn.removeAttribute("onclick");
+                createPaymentBtn.removeAttribute("data-bs-target");
+                createPaymentBtn.removeAttribute("data-bs-toggle");
+                createPaymentBtn.disabled = true
+                createPaymentBtn.classList.remove('btn-primary')
+                createPaymentBtn.classList.add('btn-secondary')
+            }
+        }
+    } else {
+        document.getElementById('outputContainer').innerHTML = `
+        <div class='p-3 card-bg rounded-corner blur text-center animate__animated animate__bounceIn'>
+            ไม่มีข้อมูล
+        </div>`
+    }
+}
+
+function openCreatePaymentModal(loanId, userId, name, idCard, balance) {
+    document.getElementById('createPaymentLoanIdInput').value = loanId
+    document.getElementById('createPaymentUserId').value = userId
+    document.getElementById('createPaymentUserName').value = name
+    document.getElementById('createPaymentUserIdCard').value = idCard
+    document.getElementById('createPaymentAmountInput').setAttribute("max", balance)
+    document.getElementById('createPaymentDateInput').valueAsDate = new Date();
+}
+
+async function createPayment() {
+    const loanId = document.getElementById('createPaymentLoanIdInput').value
+    const amount = document.getElementById('createPaymentAmountInput').value
+    const date = document.getElementById('createPaymentDateInput').value
+
+    const saveBtn = document.getElementById('createPaymentBtn').value;
+    const cancleBtn = document.getElementById('createPaymentCancleBtn').value;
+
+    const paymentInfo = {
+        Amount: parseFloat(amount),
+        Date: date + "T00:00:00Z",
+        LoanID: parseInt(loanId)
+    }
+
+    try {
+        const response = await fetch(`http://127.0.0.1:8080/payments`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(paymentInfo)
+        });
+
+        const data = await response.json();
+
+        if (response.status === 200) {
+            console.log(data);
+            resultTitle.innerHTML = `<i class="fa-solid fa-circle-check text-success"></i> เพิ่มข้อมูลสำเร็จ`
+            resultBody.innerHTML = `เพิ่มข้อมูลการชำระเงินแล้วแล้วครวสอบข้อมูลได้ที่แถบ<b>การชำระเงิน</b>`
+            $("#createPaymentModal").modal("hide");
+            $("#processResultModal").modal("show");
+            document.getElementById('createPaymentAmountInput').value = null;
+            document.getElementById('createPaymentDateInput').value = null;
+            saveBtn.disabled = false
+            cancleBtn.disabled = false
+            if (state == 1) {
+                getLoans()
+            } else if (state == 2) {
+                searchLoan()
+            } else {
+                searchLoan(true)
+            }
+        } else {
+            console.error('Failed to update user info:', response.status);
+            console.error(data);
+            resultTitle.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-danger"></i> เพิ่มข้อมูลการชำระเงินไม่สำเร็จ`
+            resultBody.innerHTML = `ข้อผิดพลาด : ${data}`
+            $("#createPaymentModal").modal("hide");
+            $("#processResultModal").modal("show");
+            saveBtn.disabled = false
+            cancleBtn.disabled = false
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        resultTitle.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-danger"></i> เพิ่มข้อมูลการชำระเงินไม่สำเร็จ`
+        resultBody.innerHTML = `ไม่สามารถเชื่อมต่อกับฐานข้อมูลได้`
+        $("#createPaymentModal").modal("hide");
+        $("#processResultModal").modal("show");
+        saveBtn.disabled = false
+        cancleBtn.disabled = false
+    }
+    
+}
+
 async function getLoans() {
+    state = 1
+    document.getElementById('searchText').value = null
     document.getElementById('getAllLoanBtn').innerText = 'โหลดข้อมูลใหม่'
     document.getElementById('getAllLoanBtn').classList.remove('btn-info')
     document.getElementById('getAllLoanBtn').classList.add('btn-dark')
     document.getElementById('outputContainer').innerHTML = `
-        <div id="loader" class="pb-4 card-bg rounded-corner blur text-center animate__animated animate__bounceIn">
+        <div id="loader" class="py-3 card-bg rounded-corner blur text-center animate__animated animate__bounceIn">
             <div class="loader animate__animated animate__infinite">
                 <span class="stroke"></span>
                 <span class="stroke"></span>
@@ -18,65 +174,13 @@ async function getLoans() {
                 <span class="stroke"></span>
                 <span class="stroke"></span>
             </div>
+            <b>กำลังเชื่อมต่อฐานข้อมูล</b>
         </div>
     `
     await fetch('http://127.0.0.1:8080/loans', { method: 'GET' })
         .then(response => response.json())
         .then(data => {
-            if (data.length != 0) {
-                document.getElementById('outputContainer').innerHTML = `
-                <div class='p-3 card-bg rounded-corner blur text-center animate__animated animate__fadeInUp'>
-                    <div class="d-grid gap-2">
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal"
-                            data-bs-target="#createLoanModal">
-                            เพิ่มข้อมูลลูกค้า
-                        </button>
-                    </div>
-                    <hr>
-                    <div class="ovf-scroll">
-                        <table class="text-start">
-                            <tbody id="outputTable">
-                                <th class='text-center'>ID</th>
-                                <th>ชื่อผู้กู้ยืม</th>
-                                <th>จำนวนเงินกู้</th>
-                                <th>อัตราดอกเบี้ย</th>
-                                <th>วันที่กู้</th>
-                                <th>วันสิ้นสุด</th>
-                                <th class="text-center prevent-select">ดำเนินการ</th>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>`
-                for (i = 0; i < data.length; i++) {
-                    document.getElementById('outputTable').innerHTML += `
-                    <tr id="loanId${data[i].ID}">
-                        <td class='text-center'>${data[i].ID}</td>
-                        <td id='loanOwner${data[i].ID}'>
-                            <a class='linkText' onclick="window.location.replace('customers.html?q=${data[i].Customer.IdCardNumber}')">${data[i].Customer.Name}</a>
-                        </td>
-                        <td id='loanAmount${data[i].ID}'>${data[i].Amount}</td>
-                        <td id='loanInterest${data[i].ID}'>${data[i].LoanInterest}</td>
-                        <td id='loanStartDate${data[i].ID}'>${data[i].StartDate}</td>
-                        <td id='loanDueDate${data[i].ID}'>${data[i].DueDate}</td>
-                        <td class="text-center table-btn prevent-select">
-                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#updateLoanModal" id="loanUpdate${data[i].ID}" onclick="openUpdateModal(${data[i].ID}, '${data[i].Amount}', '${data[i].LoanInterest}', '${data[i].StartDate}', '${data[i].DueDate}')">แก้ไข</button>
-                            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteLoanModal" id="loanDelete${data[i].ID}" onclick="confirmDeleteLoan(${data[i].ID}, '${data[i].Amount}')">ลบ</button>
-                        </td>
-                    </tr>`;
-                }
-            } else {
-                document.getElementById('outputContainer').innerHTML = `
-                <div class='p-3 card-bg rounded-corner blur text-center animate__animated animate__bounceIn'>
-                    <div class="d-grid gap-2">
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal"
-                            data-bs-target="#createLoanModal">
-                            เพิ่มข้อมูลลูกค้า
-                        </button>
-                    </div>
-                    <hr>
-                    ไม่พบข้อมูล
-                </div>`
-            }
+            displayLoans(data)
         })
         .catch(error => {
             console.error('Error:', error);
@@ -89,29 +193,35 @@ async function getLoans() {
         });
 }
 
-function openUpdateModal(id, name, address, tel, email) {
+function openUpdateModal(id, amount, interest, startDate, dueDate, uid, userName, idCardNumber) {
     document.getElementById('updateLoanIdInput').value = id
-    document.getElementById('updateLoanNameInput').value = name
-    document.getElementById('updateLoanAddressInput').value = address
-    document.getElementById('updateLoanTelInput').value = tel
-    document.getElementById('updateLoanEmailInput').value = email
+    document.getElementById('updateLoanAmountInput').value = amount
+    document.getElementById('updateLoanInterestInput').value = interest
+    document.getElementById('updateLoanStartDateInput').value = startDate
+    document.getElementById('updateLoanDueDateInput').value = dueDate
+    document.getElementById('updateLoanUserId').value = uid
+    document.getElementById('updateLoanUserName').value = userName
+    document.getElementById('updateLoanUserIdCard').value = idCardNumber
 }
 
 async function updateLoanInfo() {
     const loanId = document.getElementById('updateLoanIdInput').value;
-    const loanAmount = document.getElementById('updateLoanNameInput').value;
-    const loanInterest = document.getElementById('updateLoanAddressInput').value;
-    const loanStartDate = document.getElementById('updateLoanTelInput').value;
-    const loanDueDate = document.getElementById('updateLoanEmailInput').value;
+    const loanUserId = document.getElementById('updateLoanUserId').value;
+    const loanUserName = document.getElementById('updateLoanUserName').value;
+    const loanUserIdCard = document.getElementById('updateLoanUserIdCard').value;
+    const loanAmount = document.getElementById('updateLoanAmountInput').value;
+    const loanInterest = document.getElementById('updateLoanInterestInput').value;
+    const loanStartDate = document.getElementById('updateLoanStartDateInput').value;
+    const loanDueDate = document.getElementById('updateLoanDueDateInput').value;
 
     const saveBtn = document.getElementById('updateLoanBtn');
     const cancleBtn = document.getElementById('updateLoanCancleBtn');
 
     const loanInfo = {
-        Name: loanAmount,
-        Address: loanInterest,
-        Tel: loanStartDate,
-        Email: loanDueDate
+        Amount: parseFloat(loanAmount),
+        LoanInterest: parseFloat(loanInterest),
+        StartDate: loanStartDate + "T00:00:00Z",
+        DueDate: loanDueDate + "T00:00:00Z",
     };
 
     saveBtn.disabled = true
@@ -134,7 +244,8 @@ async function updateLoanInfo() {
             document.getElementById(`loanInterest${loanId}`).innerText = loanInterest
             document.getElementById(`loanStartDate${loanId}`).innerText = loanStartDate
             document.getElementById(`loanDueDate${loanId}`).innerText = loanDueDate
-            document.getElementById(`loanUpdate${loanId}`).setAttribute('onclick', `openUpdateModal(${loanId}, '${loanAmount}', '${loanInterest}', '${loanStartDate}', '${loanDueDate}')`)
+            document.getElementById(`loanStatus${loanId}`).innerHTML = setLoanStatus(1, loanDueDate)
+            document.getElementById(`loanUpdate${loanId}`).setAttribute('onclick', `openUpdateModal(${loanId}, '${loanAmount}', '${loanInterest}', '${loanStartDate}', '${loanDueDate}', ${loanUserId}, '${loanUserName}', ${loanUserIdCard})`)
             document.getElementById(`loanDelete${loanId}`).setAttribute('onclick', `confirmDeleteLoan(${loanId}, '${loanAmount}')`)
             resultTitle.innerHTML = `<i class="fa-solid fa-circle-check text-success"></i> บันทึกข้อมูลสำเร็จ`
             resultBody.innerHTML = `บันทึกการเปลี่ยนแปลงข้อมูลแล้ว`
@@ -163,8 +274,8 @@ async function updateLoanInfo() {
     }
 }
 
-function confirmDeleteLoan(id, name) {
-    document.getElementById('deleteModalContent').innerHTML = `คุณต้องการลบข้อมูลของคุณ <b>${name}</b> ใช่หรือไม่`
+function confirmDeleteLoan(id, name, amount, interest, startDate, dueDate) {
+    document.getElementById('deleteModalContent').innerHTML = `คุณต้องการลบข้อมูลเงินกู้ต่อไปนี้ :<br><br>รหัสเงินกู้ <b>${id}</b> ของคุณ <b>${name}</b><br>จำนวนเงิน <b>${currencyFormatter.format(amount)}</b> ดอกเบี้ย <b>${interest}%</b><br>กู้เงินวันที่ <b>${convertDate(startDate)}</b> ถึงวันที่ <b>${convertDate(dueDate)}</b><br><br>ใช่หรือไม่`
     document.getElementById('confirmDeleteBtn').setAttribute("onclick", `deleteLoan(${id})`);
 }
 
@@ -206,152 +317,84 @@ async function deleteLoan(id) {
     }
 }
 
-async function createLoanInfo() {
-    const loanAmount = document.getElementById('createLoanNameInput').value;
-    const loanInterest = document.getElementById('createLoanAddressInput').value;
-    const loanStartDate = document.getElementById('createLoanTelInput').value;
-    const loanDueDate = document.getElementById('createLoanEmailInput').value;
-
-    const saveBtn = document.getElementById('createLoanBtn').value;
-    const cancleBtn = document.getElementById('createLoanCancleBtn').value;
-
-    const loanInfo = {
-        Name: loanAmount,
-        Address: loanInterest,
-        Tel: loanStartDate,
-        Email: loanDueDate
-    };
-
-    saveBtn.disabled = true
-    cancleBtn.disabled = true
-
-    try {
-        const response = await fetch(`http://127.0.0.1:8080/loans`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(loanInfo)
-        });
-
-        const data = await response.json();
-
-        if (response.status === 200) {
-            console.log(data);
-            resultTitle.innerHTML = `<i class="fa-solid fa-circle-check text-success"></i> เพิ่มข้อมูลสำเร็จ`
-            resultBody.innerHTML = `เพิ่มข้อมูลแล้ว`
-            $("#createLoanModal").modal("hide");
-            $("#processResultModal").modal("show");
-            document.getElementById('createLoanNameInput').value = null;
-            document.getElementById('createLoanAddressInput').value = null;
-            document.getElementById('createLoanTelInput').value = null;
-            document.getElementById('createLoanEmailInput').value = null;
-            saveBtn.disabled = false
-            cancleBtn.disabled = false
-            getLoans()
-        } else {
-            console.error('Failed to update loan info:', response.status);
-            console.error(data);
-            resultTitle.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-danger"></i> เพิ่มข้อมูลไม่สำเร็จ`
-            resultBody.innerHTML = `ข้อผิดพลาด : ${data}`
-            $("#createLoanModal").modal("hide");
-            $("#processResultModal").modal("show");
-            saveBtn.disabled = false
-            cancleBtn.disabled = false
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        resultTitle.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-danger"></i> เพิ่มข้อมูลไม่สำเร็จ`
-        resultBody.innerHTML = `ไม่สามารถเชื่อมต่อกับฐานข้อมูลได้`
-        $("#createLoanModal").modal("hide");
-        $("#processResultModal").modal("show");
-        saveBtn.disabled = false
-        cancleBtn.disabled = false
-    }
-}
-
-async function searchLoan() {
+async function searchLoan(isId = false) {
     const searchBtn = document.getElementById('searchBtn')
-    const tel = document.getElementById('searchText').value
+    const idCardNumber = document.getElementById('searchText').value
 
     searchBtn.disabled = true
 
-    try {
-        const response = await fetch(`http://127.0.0.1:8080/loans/search/${tel}`, {
-            method: 'GET'
-        });
+    if (isId) {
+        state = 3
+        try {
+            const response = await fetch(`http://127.0.0.1:8080/loans/${params.get('id')}`, {
+                method: 'GET'
+            });
 
-        const data = await response.json();
+            const data = await response.json();
 
-        if (response.status === 200) {
-            console.log(data);
-            document.getElementById('getAllLoanBtn').classList.remove('btn-dark')
-            document.getElementById('getAllLoanBtn').classList.add('btn-info')
-            document.getElementById('getAllLoanBtn').innerText = 'ข้อมูลลูกค้าทั้งหมด'
-            if (data.length != 0) {
-                document.getElementById('outputContainer').innerHTML = `
-                <div class='p-3 card-bg rounded-corner blur text-center animate__animated animate__fadeInUp'>
-                    <div class="d-grid gap-2">
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal"
-                            data-bs-target="#createLoanModal">
-                            เพิ่มข้อมูลลูกค้า
-                        </button>
-                    </div>
-                    <hr>
-                    <div class="ovf-scroll">
-                        <table class="text-start">
-                            <tbody id="outputTable">
-                                <th class='text-center'>ID</th>
-                                <th>ชื่อ</th>
-                                <th class='table-address'>ที่อยู่</th>
-                                <th>เบอร์โทรศัพท์</th>
-                                <th>อีเมล</th>
-                                <th class="text-center prevent-select">ดำเนินการ</th>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>`
-                for (i = 0; i < data.length; i++) {
-                    document.getElementById('outputTable').innerHTML += `
-                    <tr id="loanId${data[i].ID}">
-                        <td class='text-center'>${data[i].ID}</td>
-                        <td id='loanAmount${data[i].ID}'>${data[i].Amount}</td>
-                        <td id='loanInterest${data[i].ID}'>${data[i].LoanInterest}</td>
-                        <td id='loanStartDate${data[i].ID}'>${data[i].StartDate}</td>
-                        <td id='loanDueDate${data[i].ID}'>${data[i].DueDate}</td>
-                        <td class="text-center table-btn prevent-select">
-                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#updateLoanModal" id="loanUpdate${data[i].ID}" onclick="openUpdateModal(${data[i].ID}, '${data[i].Amount}', '${data[i].LoanInterest}', '${data[i].StartDate}', '${data[i].DueDate}')">แก้ไข</button>
-                            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteLoanModal" id="loanDelete${data[i].ID}" onclick="confirmDeleteLoan(${data[i].ID}, '${data[i].Amount}')">ลบ</button>
-                        </td>
-                    </tr>`;
-                }
+            if (response.status === 200) {
+                document.getElementById('getAllLoanBtn').classList.remove('btn-dark')
+                document.getElementById('getAllLoanBtn').classList.add('btn-info')
+                document.getElementById('getAllLoanBtn').innerHTML = `กำลังแสดงข้อมูลของรหัสเงินกู้ ${params.get('id')} <b><u>คลิกที่นี่</u></b> เพื่อแสดงข้อมูลเงินกู้ทั้งหมด`
+                displayLoans(data)
+                searchBtn.disabled = false
             } else {
-                document.getElementById('outputContainer').innerHTML = `
-                <div class='p-3 card-bg rounded-corner blur text-center animate__animated animate__bounceIn'>
-                    <div class="d-grid gap-2">
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal"
-                            data-bs-target="#createLoanModal">
-                            เพิ่มข้อมูลลูกค้า
-                        </button>
-                    </div>
-                    <hr>
-                    ไม่พบข้อมูล
-                </div>`
+                console.error('Failed to update loan info:', response.status);
+                console.error(data);
+                resultTitle.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-danger"></i> ค้นหาข้อมูลไม่สำเร็จ`
+                resultBody.innerHTML = `ข้อผิดพลาด : ${data}`
+                $("#processResultModal").modal("show");
+                searchBtn.disabled = false
             }
-            searchBtn.disabled = false
-        } else {
-            console.error('Failed to update loan info:', response.status);
-            console.error(data);
+        } catch (error) {
+            console.error('Error:', error);
             resultTitle.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-danger"></i> ค้นหาข้อมูลไม่สำเร็จ`
-            resultBody.innerHTML = `ข้อผิดพลาด : ${data}`
+            resultBody.innerHTML = `ไม่สามารถเชื่อมต่อกับฐานข้อมูลได้`
             $("#processResultModal").modal("show");
             searchBtn.disabled = false
         }
-    } catch (error) {
-        console.error('Error:', error);
-        resultTitle.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-danger"></i> ค้นหาข้อมูลไม่สำเร็จ`
-        resultBody.innerHTML = `ไม่สามารถเชื่อมต่อกับฐานข้อมูลได้`
-        $("#processResultModal").modal("show");
-        searchBtn.disabled = false
+    } else {
+        state = 2
+        try {
+            const response = await fetch(`http://127.0.0.1:8080/loans/search/${idCardNumber}`, {
+                method: 'GET'
+            });
+
+            const data = await response.json();
+
+            if (response.status === 200) {
+                document.getElementById('getAllLoanBtn').classList.remove('btn-dark')
+                document.getElementById('getAllLoanBtn').classList.add('btn-info')
+                document.getElementById('getAllLoanBtn').innerHTML = 'กำลังแสดงผลการค้นหา <b><u>คลิกที่นี่</u></b> เพื่อแสดงข้อมูลเงินกู้ทั้งหมด'
+                displayLoans(data)
+                searchBtn.disabled = false
+            } else {
+                console.error('Failed to update loan info:', response.status);
+                console.error(data);
+                resultTitle.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-danger"></i> ค้นหาข้อมูลไม่สำเร็จ`
+                resultBody.innerHTML = `ข้อผิดพลาด : ${data}`
+                $("#processResultModal").modal("show");
+                searchBtn.disabled = false
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            resultTitle.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-danger"></i> ค้นหาข้อมูลไม่สำเร็จ`
+            resultBody.innerHTML = `ไม่สามารถเชื่อมต่อกับฐานข้อมูลได้`
+            $("#processResultModal").modal("show");
+            searchBtn.disabled = false
+        }
+    }
+}
+
+function setLoanStatus(status, dueDate) {
+    nowDate = new Date
+    switch (status) {
+        case 1: if (dueDate > nowDate.toISOString()) {
+            return 'ค้างชำระ'
+        } else {
+            return '<div style="color: red;">เลยกำหนดชำระ</div>'
+        }
+        case 2: return '<div style="color: green;">ชำระแล้ว</div>'
+        default: return status
     }
 }

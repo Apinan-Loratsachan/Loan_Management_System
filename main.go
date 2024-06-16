@@ -39,6 +39,7 @@ func main() {
 	)
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
+
 		Logger: newLogger,
 	})
 
@@ -48,8 +49,8 @@ func main() {
 		fmt.Println("Connect database successful")
 	}
 
-	db.AutoMigrate(&api.Customer{}, &api.Loan{})
-	fmt.Println("Migrate database successful")
+	// db.AutoMigrate(&api.Customer{}, &api.Loan{}, &api.Payment{})
+	// fmt.Println("Migrate database successful")
 
 	app := fiber.New()
 
@@ -58,7 +59,7 @@ func main() {
 		AllowMethods: "GET,POST,HEAD,PUT,DELETE,PATCH,OPTIONS",
 	}))
 
-	// Customers API
+	// -------------- Customers API -------------------------------------------------------------------------------------
 	app.Get("/customers", func(c *fiber.Ctx) error {
 		return c.JSON(api.GetCustomers(db))
 	})
@@ -152,9 +153,19 @@ func main() {
 		return c.JSON(result)
 	})
 
-	// Loans API
+	// -------------- Loans API -------------------------------------------------------------------------------------
 	app.Get("/loans", func(c *fiber.Ctx) error {
 		return c.JSON(api.GetLoans(db))
+	})
+
+	app.Get("/loans/:id", func(c *fiber.Ctx) error {
+		id, err := strconv.Atoi(c.Params("id"))
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).SendString(err.Error())
+		}
+		lid := uint(id)
+		result := api.GetLoan(db, lid)
+		return c.JSON(result)
 	})
 
 	app.Post("/loans", func(c *fiber.Ctx) error {
@@ -168,6 +179,106 @@ func main() {
 		}
 		return c.JSON(fiber.Map{
 			"message": "Create loan sucessful",
+		})
+	})
+
+	app.Get("/loans/search/:id_card_number", func(c *fiber.Ctx) error {
+		id_card_number, _ := url.QueryUnescape(c.Params("id_card_number"))
+		result, err := api.SearchLoan(db, id_card_number)
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).SendString(err.Error())
+		}
+		return c.JSON(result)
+	})
+
+	app.Put("/loans/:id", func(c *fiber.Ctx) error {
+		id, err := strconv.Atoi(c.Params("id"))
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).SendString(err.Error())
+		}
+		loan := new(api.Loan)
+		if err := c.BodyParser(loan); err != nil {
+			return c.Status(fiber.StatusBadRequest).SendString(err.Error())
+		}
+
+		loan.ID = uint(id)
+
+		err = api.UpdateLoan(db, loan)
+		if err != nil {
+			if err.Error() == "ID Card Number is already used by another loan" {
+				return c.JSON(fiber.Map{
+					"success": false,
+					"message": err.Error(),
+				})
+			}
+			return c.Status(fiber.StatusBadRequest).SendString(err.Error())
+		}
+		return c.JSON(fiber.Map{
+			"success": true,
+			"message": "Update loan " + c.Params("id") + " sucessful",
+		})
+	})
+
+	app.Delete("/loans/:id", func(c *fiber.Ctx) error {
+		id, err := strconv.Atoi(c.Params("id"))
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).SendString(err.Error())
+		}
+		err = api.DeleteLoan(db, id)
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).SendString(err.Error())
+		}
+		return c.JSON(fiber.Map{
+			"message": "Delete loan " + c.Params("id") + " sucessful",
+		})
+	})
+
+	// --------------- Payments API -------------------------------------------------------------------------------------
+	app.Get("/payments", func(c *fiber.Ctx) error {
+		result, err := api.GetPayments(db)
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).SendString(err.Error())
+		}
+		return c.JSON(result)
+	})
+
+	app.Get("/payments/search/:loan_id", func(c *fiber.Ctx) error {
+		id, err := strconv.Atoi(c.Params("loan_id"))
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).SendString(err.Error())
+		}
+		result, err := api.SearchPayments(db, uint(id))
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).SendString(err.Error())
+		}
+		return c.JSON(result)
+	})
+
+	app.Post("/payments", func(c *fiber.Ctx) error {
+		payment := new(api.Payment)
+		if err := c.BodyParser(payment); err != nil {
+			return c.Status(fiber.StatusBadRequest).SendString(err.Error())
+		}
+		err := api.CreatePayment(db, payment)
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).SendString(err.Error())
+		}
+		return c.JSON(fiber.Map{
+			"message": "Create payment sucessful",
+		})
+	})
+
+	app.Delete("/payments/:id", func(c *fiber.Ctx) error {
+		id, err := strconv.Atoi(c.Params("id"))
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).SendString(err.Error())
+		}
+		err = api.DeletePayment(db, uint(id))
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).SendString(err.Error())
+		}
+		return c.JSON(fiber.Map{
+			"message": "Delete payment " + c.Params("id") + " sucessful",
 		})
 	})
 

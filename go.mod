@@ -4,6 +4,7 @@ go 1.22.4
 
 require (
 	github.com/andybalholm/brotli v1.0.5 // indirect
+	github.com/fxtlabs/date v0.0.0-20150819233934-d9ab6e2a88a9 // indirect
 	github.com/gofiber/fiber/v2 v2.52.4 // indirect
 	github.com/google/uuid v1.5.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect

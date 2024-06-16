@@ -70,7 +70,7 @@ func DeleteCustomer(db *gorm.DB, id int) error {
 	result := db.Delete(&customer, id)
 
 	if result.Error != nil {
-		log.Fatalf("Delete customer failed: %v", result.Error)
+		fmt.Println("Delete customer failed: ", result.Error)
 		return result.Error
 	}
 

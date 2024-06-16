@@ -7,5 +7,5 @@ function loansBtn() {
 }
 
 function paymentsBtn() {
-    
+    window.location.replace('payments.html')
 }

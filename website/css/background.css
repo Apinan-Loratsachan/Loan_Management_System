@@ -27,7 +27,6 @@
     background: rgba(255, 255, 255, 0.45);
     animation: animateBG 25s linear infinite;
     bottom: -150px;
-
 }
 
 .particles li:nth-child(1) {
