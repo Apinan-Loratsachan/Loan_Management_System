@@ -28,9 +28,21 @@
             <h3 class="text-center p-2">จัดการข้อมูลเงินกู้</h3>
             <form action="javascript:;" onsubmit="searchLoan()">
                 <div class="input-group mb-3">
+                    <div class="input-group-text">
+                        <input class="form-check-input mt-0" type="radio" value="idCard"
+                            aria-label="Radio button for following text input" name="searchType"
+                            onchange="searchTypeChange()" id="rdoSearchText" checked>
+                    </div>
                     <input type="search" class="form-control" placeholder="ค้นหาด้วยหมายเลขประจำตัวประชาชน"
                         aria-label="searchText" aria-describedby="searchText" id="searchText" pattern="[0-9]{13}"
-                        maxlength="13" minlength="13" required>
+                        maxlength="13" minlength="13">
+                    <div class="input-group-text">
+                        <input class="form-check-input mt-0" type="radio" value="lid"
+                            aria-label="Radio button for following text input" name="searchType"
+                            onchange="searchTypeChange()" id="rdoSearchId">
+                    </div>
+                    <input type="number" class="form-control" placeholder="ค้นหาด้วยรหัสเงินกู้" aria-label="searchId"
+                        aria-describedby="searchId" id="searchId">
                     <button class="btn btn-dark" type="submit" id="searchBtn">ค้นหา</button>
                 </div>
                 <button type="button" class="btn btn-dark" onclick="getLoans()"

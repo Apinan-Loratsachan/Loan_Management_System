@@ -2,11 +2,16 @@ var state = 1
 
 const params = new URLSearchParams(window.location.search);
 if (params.get('id') != null) {
-    searchLoan(true)
+    document.getElementById('rdoSearchId').checked = true
+    searchTypeChange()
+    document.getElementById('searchId').value = params.get('id')
+    searchLoan()
 } else if (params.get('q') != null) {
+    searchTypeChange()
     document.getElementById('searchText').value = params.get('q')
     searchLoan()
 } else {
+    searchTypeChange()
     getLoans()
 }
 
@@ -160,6 +165,7 @@ async function createPayment() {
 async function getLoans() {
     state = 1
     document.getElementById('searchText').value = null
+    document.getElementById('searchId').value = null
     document.getElementById('getAllLoanBtn').innerText = 'โหลดข้อมูลใหม่'
     document.getElementById('getAllLoanBtn').classList.remove('btn-info')
     document.getElementById('getAllLoanBtn').classList.add('btn-dark')
@@ -317,16 +323,17 @@ async function deleteLoan(id) {
     }
 }
 
-async function searchLoan(isId = false) {
+async function searchLoan() {
     const searchBtn = document.getElementById('searchBtn')
     const idCardNumber = document.getElementById('searchText').value
+    const lid = document.getElementById('searchId').value
 
     searchBtn.disabled = true
 
-    if (isId) {
+    if (document.getElementById('rdoSearchId').checked) {
         state = 3
         try {
-            const response = await fetch(`http://127.0.0.1:8080/loans/${params.get('id')}`, {
+            const response = await fetch(`http://127.0.0.1:8080/loans/${lid}`, {
                 method: 'GET'
             });
 
@@ -335,7 +342,7 @@ async function searchLoan(isId = false) {
             if (response.status === 200) {
                 document.getElementById('getAllLoanBtn').classList.remove('btn-dark')
                 document.getElementById('getAllLoanBtn').classList.add('btn-info')
-                document.getElementById('getAllLoanBtn').innerHTML = `กำลังแสดงข้อมูลของรหัสเงินกู้ ${params.get('id')} <b><u>คลิกที่นี่</u></b> เพื่อแสดงข้อมูลเงินกู้ทั้งหมด`
+                document.getElementById('getAllLoanBtn').innerHTML = `กำลังแสดงข้อมูลของรหัสเงินกู้ ${lid} <b><u>คลิกที่นี่</u></b> เพื่อแสดงข้อมูลเงินกู้ทั้งหมด`
                 displayLoans(data)
                 searchBtn.disabled = false
             } else {
@@ -396,5 +403,26 @@ function setLoanStatus(status, dueDate) {
         }
         case 2: return '<div style="color: green;">ชำระแล้ว</div>'
         default: return status
+    }
+}
+
+function searchTypeChange() {
+    const idCardInput = document.getElementById('searchText')
+    // const idCardRdo = document.getElementById('rdoSearchText')
+    const lidInput = document.getElementById('searchId')
+    const lidRdo = document.getElementById('rdoSearchId')
+
+    if (lidRdo.checked) {
+        lidInput.required = true
+        idCardInput.required = false
+        lidInput.disabled = false
+        idCardInput.value = null
+        idCardInput.disabled = true
+    } else {
+        idCardInput.required = true
+        lidInput.required = false
+        idCardInput.disabled = false
+        lidInput.value = null
+        lidInput.disabled = true
     }
 }
