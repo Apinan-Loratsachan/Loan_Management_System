@@ -58,7 +58,7 @@ function displayLoans(data) {
                 <td id='loanBalance${data[i].ID}' class='text-end'>${currencyFormatter.format(data[i].Balance)}</td>
                 <td id='loanStatus${data[i].ID}' class='text-center'>${setLoanStatus(data[i].Status, data[i].DueDate)}</td>
                 <td class="text-center table-btn prevent-select">
-                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#updateLoanModal" id="loanUpdate${data[i].ID}" onclick="openUpdateModal(${data[i].ID}, ${data[i].Amount}, ${data[i].LoanInterest}, '${data[i].StartDate.replaceAll('T00:00:00Z', '')}', '${data[i].DueDate.replaceAll('T00:00:00Z', '')}', ${data[i].Customer.ID}, '${data[i].Customer.Name}', ${data[i].Customer.IdCardNumber})">แก้ไข</button>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#updateLoanModal" id="loanUpdate${data[i].ID}" onclick="openUpdateModal(${data[i].ID}, ${data[i].Amount}, ${data[i].LoanInterest}, '${data[i].StartDate.replaceAll('T00:00:00Z', '')}', '${data[i].DueDate.replaceAll('T00:00:00Z', '')}', ${data[i].Customer.ID}, '${data[i].Customer.Name}', ${data[i].Customer.IdCardNumber}, ${data[i].TotalPayments})">แก้ไข</button>
                     <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createPaymentModal" id="paymentCreate${data[i].ID}" onclick="openCreatePaymentModal(${data[i].ID}, ${data[i].Customer.ID}, '${data[i].Customer.Name}', ${data[i].Customer.IdCardNumber}, ${data[i].Balance})">เพิ่มการชำระเงิน</button>
                     <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteLoanModal" id="loanDelete${data[i].ID}" onclick="confirmDeleteLoan(${data[i].ID}, '${data[i].Customer.Name}', ${data[i].Amount}, ${data[i].LoanInterest}, '${data[i].StartDate.replaceAll('T00:00:00Z', '')}', '${data[i].DueDate.replaceAll('T00:00:00Z', '')}')">ลบ</button>
                 </td>
@@ -199,9 +199,10 @@ async function getLoans() {
         });
 }
 
-function openUpdateModal(id, amount, interest, startDate, dueDate, uid, userName, idCardNumber) {
+function openUpdateModal(id, amount, interest, startDate, dueDate, uid, userName, idCardNumber, minAmount) {
     document.getElementById('updateLoanIdInput').value = id
     document.getElementById('updateLoanAmountInput').value = amount
+    document.getElementById('updateLoanAmountInput').min = minAmount
     document.getElementById('updateLoanInterestInput').value = interest
     document.getElementById('updateLoanStartDateInput').value = startDate
     document.getElementById('updateLoanDueDateInput').value = dueDate
